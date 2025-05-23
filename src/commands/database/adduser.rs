@@ -13,14 +13,14 @@ pub async fn run(options: &[ResolvedOption<'_>], database: &Pool<MySql>) -> Stri
         value: ResolvedValue::User(user, _), ..
     }) = options.first()
     {
-        let user_data_result = query("SELECT * FROM users WHERE clientid=?;")
+        let user_data_result = query("SELECT * FROM users WHERE discordid=?;")
                     .bind(user.id.get())
                     .fetch_one(database).await;
         if let Err(why) = user_data_result {
             println!("Database Error: {why:?}");
             let message = match why {
                 Error::RowNotFound => {
-                    if let Err(why) = query("INSERT INTO users (clientid) VALUES (?);")
+                    if let Err(why) = query("INSERT INTO users (discordid) VALUES (?);")
                         .bind(user.id.get())
                         .execute(database)
                         .await

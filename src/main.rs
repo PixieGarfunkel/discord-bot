@@ -18,6 +18,7 @@ use serenity::prelude::*;
 
 struct Handler {
     database: Pool<MySql>,
+    api_client: reqwest::Client,
 }
 
 
@@ -50,6 +51,7 @@ impl EventHandler for Handler {
                 "attachmentinput" => Some(commands::attachmentinput::run(&command.data.options())),
                 "updatemoney" => Some(commands::database::updatemoney::run(&command.data.options(), &self.database).await),
                 "adduser" => Some(commands::database::adduser::run(&command.data.options(), &self.database).await),
+                "getmcid" => Some(commands::api::minecraft::getmcid::run(&command.data.options(), &self.api_client).await),
                 _ => Some("not implemented :(".to_string()),
             };
 
@@ -82,6 +84,7 @@ impl EventHandler for Handler {
                 commands::attachmentinput::register(),
                 commands::database::updatemoney::register(),
                 commands::database::adduser::register(),
+                commands::api::minecraft::getmcid::register(),
             ])
             .await;
 
@@ -101,19 +104,23 @@ async fn main() {
     env_logger::init();
     // Configure the client with your Discord bot token in the environment.
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+    let username = env::var("DATABASE_USERNAME").expect("Expected a token the environment");
+    let password = env::var("DATABASE_PASSWORD").expect("Expected a token the environment");
+    
+    let database_url = format!("mariadb://{}:{}@localhost/discord", username, password);
+    let database: Pool<MySql> = MySqlPoolOptions::new()
+            .max_connections(5)
+            .connect(&database_url).await.expect("Unable to connect to DB");
+
+    let api_client = reqwest::Client::new();
 
     let intents = GatewayIntents::GUILD_MESSAGES |
                                   GatewayIntents::DIRECT_MESSAGES |
                                   GatewayIntents::MESSAGE_CONTENT |
                                   GatewayIntents::GUILD_MEMBERS;
-
-    let database: Pool<MySql> = MySqlPoolOptions::new()
-            .max_connections(5)
-            .connect("mariadb://root:root@localhost/discord-bot").await.expect("Unable to connect to DB");
-
     // Build our client.
     let mut client = Client::builder(token, intents)
-        .event_handler(Handler{database})
+        .event_handler(Handler{database, api_client})
         .await
         .expect("Error creating client");
 
