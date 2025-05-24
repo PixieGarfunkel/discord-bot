@@ -1,4 +1,4 @@
-use serenity::all::{CreateEmbed, CreateEmbedFooter, EmbedFooter, Timestamp};
+use serenity::all::{CreateEmbed, CreateEmbedFooter, Timestamp};
 use serenity::builder::{CreateCommand, CreateCommandOption};
 use serenity::model::application::{CommandOptionType, ResolvedOption, ResolvedValue};
 
