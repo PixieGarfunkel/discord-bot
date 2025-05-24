@@ -1,23 +1,23 @@
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct MCUserMeta {
     pub cached_at: u32,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct MCUserProperties {
     pub name: String,
     pub value: String,
     pub signature: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct MCUserNameHistory {
     pub name: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct MCUserPlayer {
     pub meta: MCUserMeta,
     pub username: String,
@@ -29,12 +29,12 @@ pub struct MCUserPlayer {
     pub name_history: Vec<MCUserNameHistory>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct MCUserData {
     pub player: Option<MCUserPlayer>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct MCUser {
     pub code: String,
     pub message: String,

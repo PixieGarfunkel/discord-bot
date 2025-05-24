@@ -1,9 +1,11 @@
+use serenity::all::{CreateEmbed, CreateEmbedFooter, EmbedFooter, Timestamp};
 use serenity::builder::{CreateCommand, CreateCommandOption};
 use serenity::model::application::{CommandOptionType, ResolvedOption, ResolvedValue};
 
 use crate::commands::api::minecraft::mcapi_types::MCUser;
+use crate::types::CommandReturn;
 
-pub async fn run(options: &[ResolvedOption<'_>], api_client: &reqwest::Client) -> String {
+pub async fn run(options: &[ResolvedOption<'_>], api_client: &reqwest::Client) -> CommandReturn {
     if let Some(ResolvedOption {
         value: ResolvedValue::String(username), ..
     }) = options.first() {
@@ -12,14 +14,35 @@ pub async fn run(options: &[ResolvedOption<'_>], api_client: &reqwest::Client) -
 
         let mc_user: MCUser = response.json().await.expect("Unable to convert response to json!");
         if mc_user.success {
-            let return_username = format!("Here's {}'s Minecraft user id: {}", username, mc_user.data.player.unwrap().id);
-            return_username
+            let mc_player = mc_user.data.player.clone().unwrap();
+            let mc_id = mc_player.id;
+            let mc_avatar = mc_player.avatar;
+            let time = chrono::Utc::now().to_rfc3339();
+            let timestamp: Timestamp = time.parse().expect("Invalid Timestamp");
+            let return_embed = CreateEmbed::new()
+                            .color(0xa000ff)
+                            .title(username.to_string())
+                            .field("Minecraft ID", mc_id, true)
+                            .thumbnail(mc_avatar)
+                            .timestamp(timestamp)
+                            .description("User information found!")
+                            .footer(CreateEmbedFooter::new("User found!"));
+            CommandReturn {
+                embedded: Some(return_embed),
+                message: None,
+            }
         } else {
             let return_string = format!("Unable to find {} as a Minecraft username.", username);
-            return_string
+            CommandReturn {
+                embedded: None,
+                message: Some(return_string),
+            }
         }
     } else {
-        "Please provide a valid string".to_string()
+        CommandReturn {
+            embedded: None,
+            message: Some("Please provide a valid string".to_string()),
+        }
     }
 }
 
