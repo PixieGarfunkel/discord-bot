@@ -22,8 +22,6 @@ struct Handler {
     api_client: reqwest::Client,
 }
 
-
-
 #[async_trait]
 impl EventHandler for Handler {
     async fn guild_member_addition(&self, ctx: Context, _member: Member) {
@@ -45,26 +43,17 @@ impl EventHandler for Handler {
     }
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::Command(command) = interaction {
-            let command_return: Option<types::CommandReturn> = match command.data.name.as_str() {
+            let command_return: CreateInteractionResponseMessage = match command.data.name.as_str() {
                 // "ping" => Some(commands::ping::run(&command.data.options())),
                 // "id" => Some(commands::id::run(&command.data.options())),
                 // "attachmentinput" => Some(commands::attachmentinput::run(&command.data.options())),
                 // "updatemoney" => Some(commands::database::updatemoney::run(&command.data.options(), &self.database).await),
                 // "adduser" => Some(commands::database::adduser::run(&command.data.options(), &self.database).await),
-                "getmcid" => Some(commands::api::minecraft::getmcid::run(&command.data.options(), &self.api_client).await),
-                _ => Some(types::CommandReturn {
-                            message: Some("not implemented :(".to_string()),
-                            embedded: None,
-                }),
+                "getmcid" => commands::api::minecraft::getmcid::run(&command.data.options(), &self.api_client).await,
+                _ => CreateInteractionResponseMessage::new().content("Command not implemented".to_string()).ephemeral(true),
             };
-            let data: CreateInteractionResponseMessage;
-            if command_return.as_ref().unwrap().message.is_some() {
-                data = CreateInteractionResponseMessage::new().content(command_return.unwrap().message.unwrap()).ephemeral(true);
-            } else {
-                data = CreateInteractionResponseMessage::new().embed(command_return.unwrap().embedded.unwrap());
-            }
             
-            let builder = CreateInteractionResponse::Message(data);
+            let builder = CreateInteractionResponse::Message(command_return);
             if let Err(why) = command.create_response(&ctx.http, builder).await {
                 println!("Cannot respond to slash command: {why}");
             }

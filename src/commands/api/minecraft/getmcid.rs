@@ -1,11 +1,10 @@
-use serenity::all::{CreateEmbed, CreateEmbedFooter, Timestamp};
+use serenity::all::{CreateEmbed, CreateEmbedFooter, CreateInteractionResponseMessage, Timestamp};
 use serenity::builder::{CreateCommand, CreateCommandOption};
 use serenity::model::application::{CommandOptionType, ResolvedOption, ResolvedValue};
 
 use crate::commands::api::minecraft::mcapi_types::MCUser;
-use crate::types::CommandReturn;
 
-pub async fn run(options: &[ResolvedOption<'_>], api_client: &reqwest::Client) -> CommandReturn {
+pub async fn run(options: &[ResolvedOption<'_>], api_client: &reqwest::Client) -> CreateInteractionResponseMessage {
     if let Some(ResolvedOption {
         value: ResolvedValue::String(username), ..
     }) = options.first() {
@@ -27,22 +26,13 @@ pub async fn run(options: &[ResolvedOption<'_>], api_client: &reqwest::Client) -
                             .timestamp(timestamp)
                             .description("User information found!")
                             .footer(CreateEmbedFooter::new("User found!"));
-            CommandReturn {
-                embedded: Some(return_embed),
-                message: None,
-            }
+            CreateInteractionResponseMessage::new().embed(return_embed)
         } else {
             let return_string = format!("Unable to find {} as a Minecraft username.", username);
-            CommandReturn {
-                embedded: None,
-                message: Some(return_string),
-            }
+            CreateInteractionResponseMessage::new().content(return_string).ephemeral(true)
         }
     } else {
-        CommandReturn {
-            embedded: None,
-            message: Some("Please provide a valid string".to_string()),
-        }
+        CreateInteractionResponseMessage::new().content("Please provide a valid string".to_string()).ephemeral(true)
     }
 }
 
